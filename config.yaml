@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-configmap
+  namespace: apps
+  labels:
+    app: otel-collector
+data:
+  otel-collector-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+      jaeger:
+        protocols:
+          grpc:
+          thrift_http:
+      zipkin:
+
+    exporters:
+      otlp:
+        endpoint: "otel-collector-service:4317"
+      prometheus:
+        endpoint: "0.0.0.0:8889"
+        namespace: apps
+        const_labels:
+          app: otel-collector
+      logging:
+
+      zipkin:
+        endpoint: "http://zipkin-service:9411/api/v2/spans"
+        format: proto
+
+      jaeger:
+        endpoint: "jeager-service:14250"
+        tls:
+          insecure: true
+
+    processors:
+      batch:
+
+    extensions:
+      health_check:
+      pprof:
+        endpoint: :1888
+      zpages:
+        endpoint: :55679
+
+    service:
+      extensions: [pprof, zpages, health_check]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [logging, zipkin, jaeger]
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [logging, prometheus]
