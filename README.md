@@ -1,1 +1,1 @@
-This deployment setups the opentelementry stack with jeager and zipkin and persistence data in elasticsearch.
+This deployment setups the OpenTelemetry stack with jeager and zipkin and persistence data in elasticsearch.
