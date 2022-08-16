@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: apps
+spec:
+  selector:
+    matchLabels:
+      app: otel-collector
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      containers:
+      - name: otel-collector
+        image: "otel/opentelemetry-collector:latest"
+        command: 
+          - "/otelcol" 
+          - "--config=/config/otel-collector-config.yaml"
+        volumeMounts:
+            - name: otel-collector-configvol
+              mountPath: /config
+      volumes:
+        - name: otel-collector-configvol
+          configMap:
+            defaultMode: 420
+            name: otel-collector-configmap
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zipkin
+  namespace: apps
+spec:
+  selector:
+    matchLabels:
+      app: zipkin
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: zipkin
+    spec:
+      containers:
+      - name: zipkin
+        image: "openzipkin/zipkin:latest"
+        env:
+          - name: STORAGE_TYPE
+            value: elasticsearch
+          - name: ES_INDEX
+            value: zipkin
+          - name: ES_HOSTS
+            value: elasticsearch-service.monitoring.svc:9200
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jeager
+  namespace: apps
+spec:
+  selector:
+    matchLabels:
+      app: jeager
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: jeager
+    spec:
+      containers:
+      - name: jeager
+        image: "jaegertracing/all-in-one"
+        env:
+          - name: COLLECTOR_ZIPKIN_HOST_PORT
+            value: "9411"
+  
